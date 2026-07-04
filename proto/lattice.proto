@@ -1,0 +1,120 @@
+syntax = "proto3";
+package lattice;
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum Priority {
+  BATCH    = 0;
+  NORMAL   = 1;
+  HIGH     = 2;
+  CRITICAL = 3;
+}
+
+enum JobState {
+  PENDING   = 0;
+  RESERVED  = 1;
+  RUNNING   = 2;
+  COMPLETED = 3;
+  FAILED    = 4;
+  CANCELLED = 5;
+  PREEMPTED = 6;
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+
+message ResourceSpec {
+  double cpu_cores   = 1;
+  double memory_gb   = 2;
+  int32  gpu_count   = 3;
+}
+
+message JobSpec {
+  string        job_id       = 1;
+  string        team         = 2;
+  string        name         = 3;
+  Priority      priority     = 4;
+  ResourceSpec  resources    = 5;
+  int32         num_workers  = 6;
+  int32         max_retries  = 7;
+  int32         estimated_duration_seconds = 8;
+  string        checkpoint_path = 9;
+  map<string,string> labels  = 10;
+}
+
+message JobStatus {
+  string   job_id        = 1;
+  JobState state         = 2;
+  string   team          = 3;
+  string   name          = 4;
+  Priority priority      = 5;
+  repeated string worker_ids = 6;
+  int64    submitted_at  = 7;
+  int64    started_at    = 8;
+  int64    finished_at   = 9;
+  string   message       = 10;
+  int32    retry_count   = 11;
+  string   checkpoint_path = 12;
+}
+
+message SubmitRequest  { JobSpec spec = 1; }
+message SubmitResponse { string job_id = 1; bool accepted = 2; string message = 3; }
+
+message CancelRequest  { string job_id = 1; }
+message CancelResponse { bool success = 1; string message = 2; }
+
+message StatusRequest  { string job_id = 1; }
+message StatusResponse { JobStatus status = 1; }
+
+message ListRequest {
+  string team       = 1;
+  string state      = 2;
+  int32  limit      = 3;
+}
+message ListResponse   { repeated JobStatus jobs = 1; }
+
+message StreamRequest  { string job_id = 1; }
+message JobEvent {
+  string job_id    = 1;
+  JobState state   = 2;
+  string  message  = 3;
+  int64   timestamp = 4;
+}
+
+message ClusterStatus {
+  int32  total_workers    = 1;
+  int32  idle_workers     = 2;
+  int32  busy_workers     = 3;
+  double utilisation_pct  = 4;
+  int32  pending_jobs     = 5;
+  int32  running_jobs     = 6;
+  map<string,double> team_dominant_shares = 7;
+}
+message ClusterRequest {}
+
+// Worker agent messages
+message HeartbeatRequest {
+  string worker_id   = 1;
+  double cpu_percent = 2;
+  double memory_gb   = 3;
+  bool   healthy     = 4;
+}
+message HeartbeatResponse { bool ack = 1; }
+
+message CheckpointRequest  { string checkpoint_path = 1; }
+message CheckpointResponse { bool success = 1; string path = 2; }
+
+// ── Services ──────────────────────────────────────────────────────────────────
+
+service LatticeScheduler {
+  rpc Submit       (SubmitRequest)  returns (SubmitResponse);
+  rpc Cancel       (CancelRequest)  returns (CancelResponse);
+  rpc Status       (StatusRequest)  returns (StatusResponse);
+  rpc List         (ListRequest)    returns (ListResponse);
+  rpc StreamEvents (StreamRequest)  returns (stream JobEvent);
+  rpc ClusterStats (ClusterRequest) returns (ClusterStatus);
+}
+
+service WorkerAgent {
+  rpc Heartbeat   (HeartbeatRequest)   returns (HeartbeatResponse);
+  rpc Checkpoint  (CheckpointRequest)  returns (CheckpointResponse);
+}

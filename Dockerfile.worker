@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl procps && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir grpcio grpcio-tools psutil torch numpy structlog
+
+ENV WORKER_ID=unknown
+ENV SCHEDULER_HOST=host.docker.internal
+ENV SCHEDULER_PORT=50051
+
+COPY lattice/worker/agent.py /app/agent.py
+COPY lattice/proto_gen/ /app/proto_gen/
+
+CMD ["python", "/app/agent.py"]

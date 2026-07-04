@@ -1,0 +1,45 @@
+scheduler:
+  port: 50051
+  algorithm: "drf"          # fifo | drf | gang | backfill
+  tick_interval_ms: 500     # scheduler loop interval
+  preemption_enabled: true
+  backfill_enabled: true
+  gang_scheduling_enabled: true
+
+cluster:
+  total_cpu_cores: 16.0     # simulated cluster total
+  total_memory_gb: 32.0
+  total_gpu_count: 8        # simulated
+  max_workers: 8            # Docker worker containers
+
+workers:
+  cpu_limit: "2"            # Docker --cpus
+  memory_limit: "4g"        # Docker --memory
+  image: "lattice-worker:latest"
+  heartbeat_interval_seconds: 5
+  heartbeat_timeout_seconds: 30
+
+redis:
+  url: "redis://localhost:6379"
+  queue_key: "lattice:jobs"
+  lock_ttl_seconds: 30
+
+sqlite:
+  db_path: "lattice.db"
+
+preemption:
+  priority_gap: 2           # only preempt if gap >= 2 priority levels
+  checkpoint_timeout_seconds: 30
+  signal: "SIGUSR1"
+
+backfill:
+  lookahead_jobs: 10        # how many pending jobs to consider for backfill
+  safety_margin_seconds: 60 # finish before big job's start minus this
+
+api:
+  host: "0.0.0.0"
+  rest_port: 8002
+  grpc_port: 50051
+
+prometheus:
+  enabled: true
