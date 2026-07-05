@@ -346,7 +346,3 @@ The test suite covers FIFO scheduling, DRF fair-share, gang scheduling, preempti
 * Live scheduler dashboard UI
 
 ---
-
-## Resume Bullet
-
-Built a distributed ML job scheduler simulation with FIFO, Dominant Resource Fairness, gang scheduling, preemption, and backfill, using Redis-backed queues, SQLite job state, Docker worker simulation, and Prometheus/Grafana observability.
