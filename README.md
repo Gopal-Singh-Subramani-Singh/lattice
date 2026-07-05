@@ -299,9 +299,7 @@ open utilisation_report.png
 
 ---
 
-## Resume Bullet
 
-> Built a distributed ML job scheduler with simulated multi-worker execution, fair-share scheduling (DRF), gang scheduling, preemption, backfill, Redis-backed state, and Prometheus observability.
 
 ---
 
