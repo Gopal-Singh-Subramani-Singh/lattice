@@ -20,36 +20,27 @@ Production ML clusters face scheduling problems that naive FIFO queues cannot so
 
 ## Architecture
 
-```
-REST API (FastAPI, :8002) / gRPC Server (:50051)
-    │
-    ▼
-Scheduler Engine
-    ├── FIFO Scheduler
-    │     └── 4 priority tiers: critical > high > normal > batch
-    ├── DRF Scheduler (Dominant Resource Fairness)
-    │     └── per-team fair-share based on dominant resource
-    ├── Gang Scheduler
-    │     └── atomic all-or-nothing multi-worker reservation
-    ├── Preemption Controller
-    │     └── SIGUSR1 → checkpoint (torch.save) → evict → reschedule
-    └── Backfill Scheduler
-          └── fill idle capacity while large jobs wait in queue
-    │
-    ├── Redis Sorted Set Queue
-    │     └── priority-ordered job queue
-    │
-    ├── SQLite Job State Store
-    │     └── persistent job history and status
-    │
-    └── Worker Pool
-          └── Docker containers with cgroup resource constraints
+```mermaid
+flowchart TD
+    API([REST API :8002\ngRPC Server :50051]) --> SE[Scheduler Engine]
 
-Prometheus (12 metrics) ──► Grafana (auto-provisioned dashboards)
+    SE --> FIFO[FIFO Scheduler\n4 priority tiers\ncritical · high · normal · batch]
+    SE --> DRF[DRF Scheduler\nDominant Resource Fairness\nper-team fair-share]
+    SE --> GANG[Gang Scheduler\natomic all-or-nothing\nmulti-worker reservation]
+    SE --> PRMP[Preemption Controller\nSIGUSR1 → checkpoint → evict → reschedule]
+    SE --> BF[Backfill Scheduler\nfill idle capacity while large jobs wait]
 
-Simulation
-    ├── stress_test.py     → 200-job live simulation
-    └── utilisation_report.py → FIFO vs DRF comparison chart
+    SE --> RQ[(Redis Sorted Set Queue\npriority-ordered · persistent)]
+    SE --> SS[(SQLite Job State Store\npersistent job history)]
+
+    SE --> WP[Worker Pool\nDocker containers\nresource-constrained]
+
+    WP --> OBS[Prometheus · 12 metrics\n──► Grafana Dashboards\nauto-provisioned]
+
+    style API fill:#4A90D9,color:#fff
+    style SE fill:#7B68EE,color:#fff
+    style OBS fill:#2E8B57,color:#fff
+    style PRMP fill:#C0392B,color:#fff
 ```
 
 ---
