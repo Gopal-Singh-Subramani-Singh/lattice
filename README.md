@@ -302,3 +302,10 @@ open utilisation_report.png
 ## Resume Bullet
 
 > Built a distributed ML job scheduler with simulated multi-worker execution, fair-share scheduling (DRF), gang scheduling, preemption, backfill, Redis-backed state, and Prometheus observability.
+
+---
+
+## Screenshots
+
+![API documentation interface showing an executed GET request to a /cluster endpoint](docs/image58.png)
+![Responses section showing a 200 Successful Response and an example JSON schema](docs/image59.png)
